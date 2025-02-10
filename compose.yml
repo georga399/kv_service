@@ -1,0 +1,40 @@
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATA: /data/postgres
+    volumes:
+       - ./postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+
+  cpp_service:
+    container_name: cpp_service_container
+
+    # Build need time
+
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile  # Ensure this points to your Dockerfile
+
+    image: georga399/kv_service
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      DB_CONNECTION_STRING: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres"
+    ports:
+      - "5003:5003"  # Expose the port your C++ service listens on
+    depends_on:
+      - postgres
+    networks:
+      - postgres
+    command: ["5003", "postgresql://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-changeme}@postgres:5432/postgres"]
+
+networks:
+  postgres:
+    driver: bridge
